@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Poké-Costo de Ítems</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+
+        /* Paleta de Colores Pokémon: Rojo, Blanco, Negro, y un Azul/Cian para contraste */
+
+        :root {
+
+            --poke-red: #cc0000; /* Rojo Poké Ball */
+
+            --poke-dark-red: #a50000;
+
+            --poke-light: #ffffff; /* Blanco */
+
+            --poke-dark: #222222; /* Negro/Gris Oscuro */
+
+            --poke-blue: #3b4cca; /* Azul Logo */
+
+            --poke-yellow: #ffde00; /* Amarillo Logo */
+
+            --poke-green: #008000; /* Verde para totales */
+
+        }
+
+        /* Estilos Base - Sentimiento Retro/Aventurero */
+
+        body {
+
+            font-family: 'Inter', sans-serif;
+
+            background-color: var(--poke-red); /* Fondo principal ROJO vibrante */
+
+            /* Patrón sutil de Poké Ball repetida */
+
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="20" stroke-dasharray="2 10"/><path d="M50 0 L50 100" stroke="white" stroke-width="2" /></svg>'); 
+
+            background-size: 50px 50px;
+
+        }
+
+        .container-pk {
+
+            min-height: 100vh;
+
+            border: 8px solid var(--poke-dark); /* Borde grueso como un marco de juego */
+
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* Sombra dramática */
+
+            background-color: var(--poke-light); /* Contenido principal BLANCO */
+
+        }
+
+        /* Título - Ajustado para ser más legible y "japonés" */
+
+        .title-pk {
+
+            color: var(--poke-dark);
+
+            text-shadow: 3px 3px 0 var(--poke-yellow); /* Texto con borde amarillo más fuerte */
+
+            letter-spacing: 3px;
+
+            border-bottom: 4px solid var(--poke-dark);
+
+            padding-bottom: 0.5rem;
+
+            font-size: 3.5rem; /* Más grande */
+
+        }
+
+        /* Campo de Búsqueda */
+
+        .search-input-pk {
+
+            border: 4px solid var(--poke-dark); /* Borde grueso */
+
+            background-color: var(--poke-light);
+
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra interior para profundidad */
+
+            font-weight: bold;
+
+            color: var(--poke-dark);
+
+        }
+
+        .search-input-pk:focus {
+
+            border-color: var(--poke-blue); /* Foco azul Pokémon */
+
+            box-shadow: 0 0 0 3px rgba(59, 76, 202, 0.5); /* Anillo de foco */
+
+        }
+
+        
+
+        /* Contenedor de Sugerencias */
+
+        #suggestionsContainer {
+
+            position: absolute;
+
+            z-index: 100;
+
+            width: calc(100% - 2rem); /* Ajuste basado en el padding del padre */
+
+            max-height: 200px;
+
+            overflow-y: auto;
+
+            border: 4px solid var(--poke-dark);
+
+            border-top: none;
+
+            background-color: var(--poke-light);
+
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+
+            left: 0;
+
+            right: 0;
+
+            margin: 0 auto;
+
+        }
+
+        .suggestion-item {
+
+            padding: 0.75rem 1rem;
+
+            cursor: pointer;
+
+            border-bottom: 1px solid #ddd;
+
+            font-weight: 500;
+
+            transition: background-color 0.15s;
+
+        }
+
+        .suggestion-item:hover {
+
+            background-color: #f0f0f0;
+
+        }
+
+        /* Estilo de Tarjeta de Resultado (la más importante para la vibra) */
+
+        .result-item-pk {
+
+            background-color: #f0f0f0; /* Gris claro de fondo */
+
+            border: 4px solid var(--poke-dark);
+
+            border-radius: 16px; /* Bordes redondeados */
+
+            overflow: hidden;
+
+            position: relative;
+
+            transition: transform 0.2s, box-shadow 0.2s;
+
+            padding: 1rem;
+
+        }
+
+        .result-item-pk:hover {
+
+            transform: translateY(-4px);
+
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+
+        }
+
+        
+
+        /* Línea divisoria en la tarjeta (como el centro de la Poké Ball) */
+
+        .result-item-pk::before {
+
+            content: '';
+
+            position: absolute;
+
+            top: 50%;
+
+            left: 0;
+
+            right: 0;
+
+            height: 4px;
+
+            background-color: var(--poke-dark);
+
+            z-index: 10;
+
+        }
+
+        
+
+        .result-name-pk {
+
+            font-size: 1.5rem;
+
+            font-weight: 900;
+
+            color: var(--poke-dark);
+
+            text-shadow: 1px 1px 0 var(--poke-light);
+
+            z-index: 20;
+
+            position: relative;
+
+        }
+
+        
+
+        .result-tag-pk {
+
+            /* Estilo de "Medalla" o "Etiqueta" de tipo */
+
+            font-weight: 700;
+
+            letter-spacing: 1px;
+
+            border: 2px solid var(--poke-dark);
+
+            box-shadow: 2px 2px 0 var(--poke-dark);
+
+            transform: rotate(-1deg); /* Más sutil */
+
+            padding: 0.25rem 0.75rem;
+
+            min-width: fit-content;
+
+            text-align: center;
+
+            text-transform: uppercase; /* Para que se vea más como un letrero */
+
+        }
+
+        
+
+        /* Botón de Guardar/Eliminar */
+
+        .save-button-pk, .delete-button-pk {
+
+            background-color: var(--poke-blue);
+
+            color: var(--poke-light);
+
+            border: 2px solid var(--poke-dark);
+
+            font-weight: 700;
+
+            padding: 0.5rem 1rem;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            transition: background-color 0.15s, transform 0.1s;
+
+        }
+
+        .delete-button-pk {
+
+            background-color: var(--poke-dark-red);
+
+        }
+
+        .save-button-pk:hover {
+
+            background-color: #4c66e0;
+
+            transform: scale(1.05);
+
+        }
+
+        .delete-button-pk:hover {
+
+            background-color: #c90000;
+
+            transform: scale(1.05);
+
+        }
+
+        /* Estilos para las etiquetas de costo (colores de tipo o de rareza) */
+
+        .tag-ext-barato { background-color: #a8cc96; color: var(--poke-dark); } /* Verde Pastel (Tipo Hierba) */
+
+        .tag-muy-barato { background-color: #709a93; color: var(--poke-light); } /* Cian/Azul claro (Tipo Agua) */
+
+        .tag-barato { background-color: #e0d075; color: var(--poke-dark); } /* Amarillo Suave (Tipo Eléctrico/Normal) */
+
+        .tag-medio { background-color: #f7a845; color: var(--poke-dark); } /* Naranja (Tipo Fuego) */
+
+        .tag-caro { background-color: #c95d5d; color: var(--poke-light); } /* Rojo Oscuro (Tipo Lucha/Roca) */
+
+        .tag-muy-caro { background-color: #8c569f; color: var(--poke-light); } /* Púrpura (Tipo Veneno) */
+
+        .tag-ext-caro { background-color: var(--poke-dark); color: var(--poke-light); } /* Negro (Tipo Siniestro/Acero) */
+
+        /* Estilo para NO RESULTADOS: Poké Ball Rota (Usando Pseudoelementos) */
+
+        .no-results-pk {
+
+            border: 4px solid var(--poke-dark);
+
+            background-color: var(--poke-yellow);
+
+            color: var(--poke-dark);
+
+            text-shadow: 1px 1px 0 var(--poke-light);
+
+            position: relative;
+
+            padding-top: 5rem; /* Espacio para el ícono */
+
+        }
+
+        .no-results-pk::before {
+
+            content: '';
+
+            position: absolute;
+
+            top: 1rem;
+
+            left: 50%;
+
+            transform: translateX(-50%) rotate(10deg); /* Ligeramente inclinado */
+
+            width: 40px;
+
+            height: 40px;
+
+            border-radius: 50%;
+
+            background-color: var(--poke-red);
+
+            border: 4px solid var(--poke-dark);
+
+            box-shadow: inset 0 0 0 4px var(--poke-light); /* Centro Blanco */
+
+        }
+
+        .no-results-pk::after {
+
+            content: '';
+
+            position: absolute;
+
+            top: 50%;
+
+            left: 0;
+
+            right: 0;
+
+            height: 4px;
+
+            background-color: var(--poke-dark);
+
+            margin-top: -19px; /* Colocar en la mitad del círculo */
+
+            transform: rotate(5deg); /* Que se vea "roto" o fallido */
+
+        }
+
+        /* Estilos para Inputs de Cantidad */
+
+        .qty-input {
+
+            width: 80px;
+
+            text-align: center;
+
+            border: 2px solid var(--poke-dark);
+
+            border-radius: 4px;
+
+            font-weight: 700;
+
+            padding: 0.1rem 0.2rem;
+
+            transition: border-color 0.15s;
+
+        }
+
+        .qty-input:focus {
+
+            border-color: var(--poke-blue);
+
+            outline: none;
+
+        }
+
+        /* Estilos para Inputs de Configuración */
+
+        .config-input {
+
+            width: 100%;
+
+            padding: 0.5rem;
+
+            border: 2px solid #ccc;
+
+            border-radius: 4px;
+
+            font-weight: 500;
+
+            transition: border-color 0.15s;
+
+        }
+
+        .config-input:focus {
+
+            border-color: var(--poke-blue);
+
+            outline: none;
+
+        }
+
+        /* Estilos para el select de Ubicación */
+
+        .location-select {
+
+            border: 3px solid var(--poke-dark);
+
+            background-color: var(--poke-yellow);
+
+            color: var(--poke-dark);
+
+            font-weight: 700;
+
+            padding: 0.5rem;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+        }
+
+        .location-select:focus {
+
+             border-color: var(--poke-blue);
+
+        }
+
+        
+
+    </style>
+
+</head>
+
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-3xl mx-auto container-pk shadow-2xl rounded-xl p-6 md:p-10">
+
+        <h1 class="text-5xl font-extrabold text-center title-pk mb-4">
+
+            POKÉ-COSTO DE ÍTEMS
+
+        </h1>
+
+        <p class="text-gray-700 mb-8 text-center text-sm font-semibold">
+
+            ¡Busca tu artículo! **Coincidencia Exacta** para el costo. 🔍
+
+        </p>
+
+        
+
+        <div class="relative mb-8">
+
+            <input type="text" id="searchInput" oninput="handleInput()" 
+
+                   placeholder="¡Escribe el nombre del ítem!..."
+
+                   class="w-full p-4 rounded-xl focus:ring-4 transition duration-150 search-input-pk text-lg">
+
+            
+
+            <div id="suggestionsContainer" class="rounded-b-xl">
+
+                </div>
+
+        </div>
+
+        <div id="resultsContainer" class="space-y-6">
+
+            <p id="initialMessage" class="text-center text-gray-500 mt-8 text-lg font-bold">
+
+                ¡Usa la caja para buscar el costo del ítem en el inventario!
+
+            </p>
+
+        </div>
+
+        <hr class="border-t-4 border-dashed border-gray-400 my-10">
+
+        <h2 class="text-3xl font-extrabold text-center title-pk mb-6 !text-3xl !border-none !text-poke-dark">
+
+            ÍTEMS GUARDADOS <span class="text-poke-blue">💾</span>
+
+        </h2>
+
+        
+
+        <div id="savedItemsContainer" class="space-y-4 min-h-[50px]">
+
+            <p id="noSavedItems" class="text-center text-gray-500 text-lg font-bold">
+
+                ¡Ningún ítem guardado aún!
+
+            </p>
+
+        </div>
+
+        
+
+        <div class="mt-8 p-4 border-4 border-poke-dark rounded-lg bg-gray-100 shadow-inner">
+
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+
+                <label for="locationSelect" class="font-extrabold text-lg text-poke-dark flex-shrink-0 mr-4">
+
+                    ¿DÓNDE FUE LA CONSTRUCCIÓN?
+
+                </label>
+
+                <select id="locationSelect" onchange="calculateTotal()" class="location-select mt-2 sm:mt-0 flex-grow">
+
+                    </select>
+
+            </div>
+
+            <div class="mt-4 p-3 bg-poke-dark text-poke-light rounded-md">
+
+                <p class="text-xl font-bold">
+
+                    Costo Total Base: <span id="baseTotal" class="text-poke-yellow">0</span>
+
+                </p>
+
+                <p class="text-2xl font-black mt-1">
+
+                    COSTO FINAL (x Ubicación): <span id="finalTotal" class="text-poke-green">0</span>
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <hr class="border-t-4 border-dashed border-gray-400 my-10">
+
+        
+
+        <h2 class="text-3xl font-extrabold text-center title-pk mb-6 !text-3xl !border-none !text-poke-dark">
+
+            CÁLCULO DE COSTOS Y UBICACIÓN <span class="text-poke-red">⚙️</span>
+
+        </h2>
+
+        
+
+        <p class="text-center text-sm mb-4 font-semibold text-gray-700">
+
+            Los valores que introduzcas aquí se **guardarán automáticamente**.
+
+        </p>
+
+        
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div class="p-4 border-4 border-poke-dark rounded-lg bg-white shadow-lg">
+
+                <h3 class="font-extrabold text-xl text-poke-blue mb-4 border-b-2 pb-2">Precio Base por Categoría</h3>
+
+                <div id="costConfigContainer" class="space-y-3">
+
+                    </div>
+
+            </div>
+
+            <div class="p-4 border-4 border-poke-dark rounded-lg bg-white shadow-lg">
+
+                <h3 class="font-extrabold text-xl text-poke-blue mb-4 border-b-2 pb-2">Multiplicador por Ubicación</h3>
+
+                <div id="locationConfigContainer" class="space-y-3">
+
+                    </div>
+
+            </div>
+
+        </div>
+
+        
+
+    </div>
+
+    <script>
+
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        const searchInput = document.getElementById('searchInput');
+
+        const initialMessage = document.getElementById('initialMessage');
+
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+
+        const savedItemsContainer = document.getElementById('savedItemsContainer');
+
+        const noSavedItems = document.getElementById('noSavedItems');
+
+        const costConfigContainer = document.getElementById('costConfigContainer');
+
+        const locationConfigContainer = document.getElementById('locationConfigContainer');
+
+        const locationSelect = document.getElementById('locationSelect');
+
+        const baseTotalSpan = document.getElementById('baseTotal');
+
+        const finalTotalSpan = document.getElementById('finalTotal');
+
+        // --- CONSTANTES Y ALMACENAMIENTO ---
+
+        // Función para normalizar cadenas: quitar tildes, minúsculas y espacios extra.
+
+        function normalizeString(str) {
+
+            return str.toLowerCase().trim()
+
+                      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        }
+
+        const listNames = [
+
+            "Extremadamente barato", "Muy barato", "Barato", "Medio", 
+
+            "Caro", "Muy caro", "Extremadamente caro"
+
+        ];
+
+        
+
+        const locationNames = [
+
+            "Llanura", "Cueva", "Cielo", "Mar", "Adentro del Mar", "Playa"
+
+        ];
+
+        // Valores por defecto y funciones de persistencia
+
+        let listCosts = {}; // Almacena { 'Extremadamente barato': 200, ... }
+
+        let locationMultipliers = {}; // Almacena { 'Llanura': 1.0, ... }
+
+        let savedItems = []; // Almacena { name, list, quantity: 0 }
+
+        function loadConfig() {
+
+            // Cargar costos de lista
+
+            const storedCosts = JSON.parse(localStorage.getItem('listCosts'));
+
+            if (storedCosts) {
+
+                listCosts = storedCosts;
+
+            } else {
+
+                // Valores iniciales por defecto si no hay nada guardado
+
+                listNames.forEach((name, index) => {
+
+                    listCosts[name] = (index + 1) * 100; // Asignar un valor incremental
+
+                });
+
+            }
+
+            // Cargar multiplicadores de ubicación
+
+            const storedMultipliers = JSON.parse(localStorage.getItem('locationMultipliers'));
+
+            if (storedMultipliers) {
+
+                locationMultipliers = storedMultipliers;
+
+            } else {
+
+                // Valores iniciales por defecto (todos 1.0)
+
+                locationNames.forEach(name => {
+
+                    locationMultipliers[name] = 1.0;
+
+                });
+
+            }
+
+        }
+
+        function saveConfig() {
+
+            localStorage.setItem('listCosts', JSON.stringify(listCosts));
+
+            localStorage.setItem('locationMultipliers', JSON.stringify(locationMultipliers));
+
+            // Forzar recálculo
+
+            calculateTotal(); 
+
+        }
+
+        function loadSavedItems() {
+
+            const storedItems = JSON.parse(localStorage.getItem('savedItems'));
+
+            if (storedItems) {
+
+                // Asegurar que 'quantity' sea un número válido al cargar
+
+                savedItems = storedItems.map(item => ({
+
+                    ...item,
+
+                    quantity: parseInt(item.quantity) || 0
+
+                }));
+
+            }
+
+        }
+
+        function saveSavedItems() {
+
+            localStorage.setItem('savedItems', JSON.stringify(savedItems));
+
+            // Forzar recálculo
+
+            calculateTotal(); 
+
+        }
+
+        
+
+        // --- INVENTARIO COMPLETO (MANTENIDO IGUAL) ---
+
+        const listData = {
+
+            "Extremadamente barato": [
+
+                "Placa de presión de roble", "Botón de roble", "Placa de presión de abeto", "Botón de abeto", "Tablones de bambú", "Mosaico de bambú", "Escaleras de bambú", "Escaleras de mosaico de bambú", "Losa de bambú", "Losa de mosaico de bambú", "Botón de bambú", "Piedra", "Escaleras de piedra", "Losa de piedra", "Placa de presión de piedra", "Botón de piedra", "Piedra labrada", "Escaleras de piedra labrada", "Losa de piedra labrada", "Pared de piedra labrada", "Piedra labrada musgosa", "Escaleras de piedra labrada musgosa", "Losa de piedra labrada musgosa", "Pared de piedra labrada musgosa", "Granito", "Escaleras de Granito", "Losa de Granito", "Pared de Granito", "Diorita", "Andesita", "Toba", "Adobe", "Ladrillos de adobe", "Escaleras de ladrillos de adobe", "Losa de ladrillos de adobe", "Pared de ladrillos de adobe", "Arenisca roja", "Escaleras de Arenisca roja", "Losa de Arenisca roja", "Pared de Arenisca roja", "Arenisca roja grabada", "Netherrack", "Alfombra blanca", "Alfombra gris claro", "Alfombra gris", "Alfombra negra", "Alfombra café", "Alfombra roja", "Alfombra naranja", "Alfombra amarilla", "Alfombra verde lima", "Alfombra verde", "Alfombra cian", "Alfombra azul claro", "Alfombra azul", "Alfombra morada", "Alfombra magenta", "Alfombra rosa", "Polvo de concreto blanco", "Polvo de concreto gris claro", "Polvo de concreto gris", "Polvo de concreto negro", "Polvo de concreto café", "Polvo de concreto rojo", "Polvo de concreto naranja", "Polvo de concreto amarillo", "Polvo de concreto verde lima", "Polvo de concreto verde", "Polvo de concreto cian", "Polvo de concreto azul claro", "Polvo de concreto azul", "Polvo de concreto morado", "Polvo de concreto magenta", "Polvo de concreto rosa", "Azulejo blanco", "Azulejo gris claro", "Azulejo gris", "Azulejo negro", "Azulejo café", "Azulejo rojo", "Azulejo naranja", "Azulejo amarillo", "Azulejo verde lima", "Azulejo verde", "Azulejo cian", "Azulejo azul claro", "Azulejo azul", "Azulejo morado", "Azulejo magenta", "Azulejo rosa", "Panel de vidrio", "Vela", "Vela blanca", "Vela gris claro", "Vela gris", "Vela negra", "Vela café", "Vela roja", "Vela naranja", "Vela amarilla", "Vela verde lima", "Vela verde", "Vela cian", "Vela azul claro", "Vela azul", "Vela morada", "Vela magenta", "Vela rosa", "Bloque de pasto", "Podsol", "Camino de tierra", "Tierra", "Tierra infértil", "Tierra enraizada", "Tierra de cultivo", "Lodo", "Arcilla", "Grava", "Arena", "Arena roja", "Calcita", "Caliza", "Caliza puntiaguda", "Hojas de roble", "Hoja de abeto", "Hojas de abedul", "Hojas de jungla", "Hojas de acacia", "Hojas de roble oscuro", "Hojas de mangle", "Hojas de cerezo", "Hojas de azalea", "Hojas de azalea florecidas", "Bloque de hongo café", "Bloque de hongo rojo", "Bloque de verrugas del nether", "Bloque de verrugas distorsionadas", "Antorcha", "Antorcha de almas", "Antorcha de redstone", "Fogata", "Fogata de almas", "Escaleras de mano", "Andamio", "Arena sospechosa", "Grava sospechosa", "Bote de roble con cofre", "Bote de bambú con cofre", "Bote", "Madera de bonguri", "Hojas de bonguri", "Bloque de guijarros rojos", "Bloque de guijarros negros", "Bloque de guijarros celestes", "Guijarro rojo pulido", "Escaleras de guijarro rojo pulido", "Losa de guijarro rojo pulido", "Muro de guijarro rojo pulido", "Guijarro rojo pulido grabado", "Ladrillos de guijarro rojo", "Escaleras de Ladrillos de guijarro rojo", "Losa de Ladrillos de guijarro rojo", "Muro de Ladrillos de guijarro rojo", "Ladrillos de guijarro rojo grabados", "Guijarro rojo liso", "Escaleras de Guijarro rojo liso", "Losa de Guijarro rojo liso", "Guijarro negro pulido", "Escaleras de Guijarro negro pulido", "Loza de Guijarro negro pulido", "Muro de Guijarro negro pulido", "Guijarro negro pulido cincelado", "Ladrillos de guijarro negro", "Escaleras de Ladrillos de guijarro negro", "Losa de Ladrillos de guijarro negro", "Muro de Ladrillos de guijarro negro", "Ladrillos de guijarro negro grabados", "Guijarro negro liso", "Escaleras de Guijarro negro liso", "Losa de Guijarro negro liso", "Guijarro celeste pulido", "Escaleras de Guijarro celeste pulido", "Losa de Guijarro celeste pulido", "Muro de Guijarro celeste pulido", "Guijarro celeste pulido grabado", "Ladrillos de guijarro celeste", "Escaleras de Ladrillos de guijarro celeste", "Losa de Ladrillos de guijarro celeste", "Muro de Ladrillos de guijarro celeste", "Ladrillos de guijarro celeste grabados", "Guijarro celeste liso", "Escaleras de Guijarro celeste liso", "Losa de Guijarro celeste liso", "Oak Crate", "Spruce Crate", "Birch Crate", "Jungle Crate", "Acacia Crate", "Dark oak Crate", "Mangrove Crate", "Cherry Crate", "Crimson Crate", "Warped Crate", "Stone Stepping Stones", "Granite Stepping Stones", "Diorite Stepping Stones", "Andesite Stepping Stones", "Deepslate Stepping Stones", "Luz"
+
+            ],
+
+            "Muy barato": [
+
+                "Tablones de abeto", "Tablones de abedul", "Tablones de roble", "Tablones de acacia", "Botón de acacia", "Valla de bambú", "Puerta de valla de bambú", "Puerta de bambú", "Trampilla de bambú", "Placa de presión de bambú", "Granito pulido", "Escaleras de Granito pulido", "Losa de Granito pulido", "Escaleras de diorita", "Losa de diorita", "Pared de diorita", "Diorita pulida", "Escaleras de andesita", "Losa de andesita", "Pared de andesita", "Andesita pulida", "Pizarra profunda reforzada", "Escaleras de toba", "Losa de toba", "Pared de toba", "Toba grabada", "Toba pulida", "Ladrillos de toba grabados", "Ladrillos", "Escaleras de ladrillos", "Losa de ladrillos", "Pared de ladrillos", "Arenisca", "Escaleras de Arenisca", "Losa de Arenisca", "Pared de Arenisca", "Arenisca grabada", "Lana blanca", "Lana gris claro", "Lana gris", "Lana negra", "Lana café", "Lana roja", "Lana naranja", "Lana amarilla", "Lana verde lima", "Lana verde", "Lana cían", "Lana azul claro", "Lana azul", "Lana morada", "Lana magenta", "Lana rosa", "Terracota", "Terracota blanca", "Terracota gris claro", "Terracota gris", "Terracota negra", "Terracota café", "Terracota roja", "Terracota naranja", "Terracota amarilla", "Terracota verde lima", "Terracota verde", "Terracota cian", "Terracota azul claro", "Terracota azul", "Terracota morada", "Terracota magenta", "Terracota rosa", "Concreto blanco", "Concreto gris claro", "Concreto gris", "Concreto negro", "Concreto café", "Concreto rojo", "Concreto naranja", "Concreto amarillo", "Concreto verde lima", "Concreto verde", "Concreto cian", "Concreto azul claro", "Concreto azul", "Concreto morado", "Concreto magenta", "Concreto rosa", "Vidrio", "Panel de vidrio blanco", "Panel de vidrio gris claro", "Panel de vidrio gris", "Panel de vidrio negro", "Panel de vidrio café", "Panel de vidrio rojo", "Panel de vidrio naranja", "Panel de vidrio amarillo", "Panel de vidrio verde lima", "Panel de vidrio verde", "Panel de vidrio cian", "Panel de vidrio azul claro", "Panel de vidrio azul", "Panel de vidrio morada", "Panel de vidrio magenta", "Panel de vidrio rosa", "Bloque de musgo", "Alfombra de musgo", "Nilio Carmesí", "Nilio distorsionado", "Raíces de mangle", "Raíces de mangle lodosas", "Tallo de hongo", "Hongo luminoso", "Esponja", "Esponja mojada", "Sandía", "Calabaza", "Calabaza tallada", "Calabaza de halloween", "Paca de heno", "Colmena de abejas", "Mesa de trabajo", "Cortapiedras", "Mesa de cartografía", "Mesa de arquería", "Mesa de herrería", "Afiladora", "Telar", "Horno", "Ahumador", "Alto horno", "Yunque muy dañado", "Compostador", "Bloque musical", "Tocadiscos", "Mesa de encantamientos", "Apiario de abejas", "Letrero de roble", "Letrero de abeto", "Letrero de abedul", "Letrero de jungla", "Letrero de acacia", "Letrero de roble oscuro", "Letrero de mangle", "Letrero de cerezo", "Letrero de bambú", "Letrero Carmesí", "Letrero distorsionado", "Letrero colgante de roble", "Letrero colgante de abeto", "Letrero colgante de abedul", "Letrero colgante de jungla", "Letrero colgante de acacia", "Letrero colgante de roble oscuro", "Letrero colgante de mangle", "Letrero colgante de cerezo", "Letrero colgante de bambú", "Letrero colgante Carmesí", "Letrero colgante distorsionado", "Piedra infestada", "Piedra labrada infestada", "Ladrillos de piedra infestados", "Ladrillos de piedra musgosa infestados", "Ladrillos de piedra rotos infestados", "Ladridos de piedra grabados infestados", "Pizarra profunda infestada", "Repetidor de redstone", "Comparador de redstone", "Diana", "Palanca", "Sensor de sculk calibrado", "Gancho de hilo", "Sensor de luz solar", "Pistón", "Pistón pegajoso", "Dispensador", "Soltador", "Fabricador", "Tolva", "Cofre trampa", "Observador", "Tronco de bonguri", "Leño de bonguri", "Tronco de bonguri sin corteza", "Leño de bonguri sin corteza", "Escaleras de bonguri", "Losa de bonguri", "Valla de bonguri", "Puerta de valla de bonguri", "Puerta de bonguri", "Trampilla de bonguri", "Botón de bonguri", "Placa de presión de bonguri", "Cartel de bonguri", "Cartel colgante de bonguri", "Oak Chair", "Spruce Chair", "Birch Chair", "Jungle Chair", "Acacia Chair", "Dark oak Chair", "Mangrove Chair", "Cherry Chair", "Crimson Chair", "Warped Chair", "Oak Table", "Spruce Table", "Birch Table", "Jungle Table", "Acacia Table", "Dark oak Table", "Mangrove Table", "Cherry Table", "Crimson Table", "Warped Table", "Oak Desk", "Spruce Desk", "Birch Desk", "Jungle Desk", "Acacia Desk", "Dark oak Desk", "Mangrove Desk", "Cherry Desk", "Crimson Desk", "Warped Desk", "Oak Cutting Board", "Spruce Cutting Board", "Birch Cutting Board", "Jungle Cutting Board", "Acacia Cutting Board", "Dark oak Cutting Board", "Mangrove Cutting Board", "Cherry Cutting Board", "Crimson Cutting Board", "Warped Cutting Board", "Plate", "Oak Storage Jar", "Spruce Storage Jar", "Birch Storage Jar", "Jungle Storage Jar", "Acacia Storage Jar", "Dark oak Storage Jar", "Mangrove Storage Jar", "Cherry Storage Jar", "Crimson Storage Jar", "Warped Storage Jar", "White Cooler", "Light Gray Cooler", "Gray Cooler", "Black Cooler", "Brown Cooler", "Red Cooler", "Orange Cooler", "Yellow Cooler", "Lime Cooler", "Green Cooler", "Cyan Cooler", "Light Blue Cooler", "Blue Cooler", "Purple Cooler", "Magenta Cooler", "Pink Cooler", "Oak Hedge", "Spruce Hedge", "Birch Hedge", "Jungle Hedge", "Acacia Hedge", "Dark oak Hedge", "Mangrove Hedge", "Cherry Hedge", "Azalea Hedge", "Maceta delgada de Terracota", "Maceta Mediana de Terracota", "Maceta Ancha de Terracota", "Maceta Gruesa de Terracota", "Maceta delgada de Terracota Blanca Vidriada", "Maceta Mediana de Terracota Blanca Vidriada", "Maceta Ancha de Terracota Blanca Vidriada", "Maceta Gruesa de Terracota Blanca Vidriada", "Maceta Azul Vidriada Delgada", "Maceta Azul Vidriada Mediana", "Maceta Azul Vidriada Ancha", "Maceta Azul Vidriada Gruesa", "Maceta dorada delgada", "Maceta dorada Mediana", "Maceta dorada Ancha", "Maceta dorada Gruesa", "Bridge Torch", "Bridge Lantern"
+
+            ],
+
+            "Barato": [
+
+                "Escaleras de roble", "Losa de roble", "Escaleras de abeto", "Losa de abeto", "Trampilla de abeto", "Escaleras de abedul", "Losa de abedul", "Trampilla de abedul", "Placa de presión de abedul", "Botón de abedul", "Escaleras de acacia", "Losa de acacia", "Trampilla de roble oscuro", "Placa de presión de roble oscuro", "Botón de roble oscuro", "Bloque de bambú", "Bloque de bambú sin piel", "Piedra lisa", "Losa de piedra lisa", "Ladrillos de piedra rotos", "Ladrillos de piedra musgosa", "Escaleras de ladrillos de piedra musgosa", "Losa de ladrillos de piedra musgosa", "Pared de ladrillos de piedra musgosa", "Escaleras de diorita pulida", "Losa de diorita pulida", "Escaleras de andesita pulida", "Losa de andesita pulida", "Pizarra profunda", "Pizarra profunda labrada", "Ladrillos de Pizarra profunda rotos", "Escaleras de toba pulida", "Losa de toba pulida", "Pared de toba pulida", "Ladrillos de toba", "Arenisca roja lisa", "Escaleras de Arenisca roja lisa", "Losa de Arenisca roja lisa", "Arenisca roja cortada", "Losa de Arenisca roja cortada", "Piedra negra", "Escaleras de piedra negra", "Losa de piedra negra", "Pared de piedra negra", "Bloque de redstone", "Cobre oxidado", "Cobre grabado oxidado", "Rejilla de cobre oxidado", "Cobre cortado oxidado", "Escaleras de cobre cortado oxidado", "Losa de cobre cortado oxidado", "Puerta de cobre oxidado", "Trampilla de cobre oxidado", "Bombilla de cobre oxidado", "Vidrio blanco", "Vidrio gris claro", "Vidrio gris", "Vidrio negro", "Vidrio café", "Vidrio rojo", "Vidrio naranja", "Vidrio amarillo", "Vidrio verde lima", "Vidrio verde", "Vidrio cian", "Vidrio azul claro", "Vidrio azul", "Vidrio morado", "Vidrio magenta", "Vidrio rosa", "Caja de shulker", "Estandarte blanco", "Estandarte gris claro", "Estandarte gris", "Estandarte negro", "Estandarte café", "Estandarte rojo", "Estandarte naranja", "Estandarte amarillo", "Estandarte verde lima", "Estandarte verde", "Estandarte cian", "Estandarte azul claro", "Estandarte azul", "Estandarte morada", "Estandarte magenta", "Estandarte rosa", "Hielo", "Hielo comprimido", "Hielo azul", "Bloque de magma", "Arena de almas", "Tierra de almas", "Bloque de huesos", "Mineral de carbón", "Mineral de carbón de Pizarra profunda", "Mineral de redstone", "Mineral de redstone de Pizarra profunda", "Mineral de lapislázuli", "Mineral de lapislázuli de Pizarra profunda", "Piedra luminosa", "Brotador de amatista", "Brote de amatista pequeño", "Pepino de mar", "Bloque de Panal", "Bloque de Slime", "Bloque de miel", "Farol", "Farol de almas", "Vara del end", "Lámpara", "Yunque dañado", "Maceta", "Jarrón", "Soporte para armadura", "Cofre", "Barril", "Vía", "Vía propulsora", "Vía detectora", "Vía activadora", "Vagón", "Vagón con tolva", "Vagón con cofre", "Vagón con horno", "Vagón con tnt", "TNT", "Oak Drawer", "Spruce Drawer", "Birch Drawer", "Jungle Drawer", "Acacia Drawer", "Dark oak Drawer", "Mangrove Drawer", "Cherry Drawer", "Crimson Drawer", "Warped Drawer", "White Stool", "Light Gray Stool", "Gray Stool", "Black Stool", "Brown Stool", "Red Stool", "Orange Stool", "Yellow Stool", "Lime Stool", "Green Stool", "Cyan Stool", "Light Blue Stool", "Blue Stool", "Purple Stool", "Magenta Stool", "Pink Stool", "Spatula", "Knife", "Cojín blanco", "Cojín gris claro", "Cojín gris", "Cojín negro", "Cojín marrón", "Cojín rojo", "Cojín naranja", "Cojín amarillo", "Cojín verde lima", "Cojín verde", "Cojín cian", "Cojín azul claro", "Cojín azul", "Cojín morado", "Cojín magenta", "Cojín rosa", "Sábana blanca", "Sábana gris claro", "Sábana gris", "Sábana negra", "Sábana marrón", "Sábana roja", "Sábana naranja", "Sábana amarilla", "Sábana verde lima", "Sábana verde", "Sábana cian", "Sábana azul claro", "Sábana azul", "Sábana morada", "Sábana magenta", "Sábana rosa", "Cajón de acacia", "Cajón de bambú", "Cajón de abedul", "Cajón de cerezo", "Cajón de carmesí", "Cajón de roble oscuro", "Cajón de selva", "Cajón de manglar", "Cajón de roble", "Cajón de abeto", "Cajón de madera distorsionada"
+
+            ],
+
+            "Medio": [
+
+                "Tronco de roble", "Leño de roble", "Tronco de roble sin corteza", "Leño de roble sin corteza", "Valla de roble", "Puerta de valla de roble", "Puerta de roble", "Leño de abeto sin corteza", "Tronco de abeto sin corteza", "Trampilla de roble", "Tronco de abeto", "Leño de abeto", "Valla de abeto", "Puerta de valla de abeto", "Puerta de abeto", "Tronco de abedul", "Leño de abedul", "Tronco de abedul sin corteza", "Leño de abedul sin corteza", "Valla de abedul", "Puerta de valla de abedul", "Puerta de abedul", "Tablones de jungla", "Trampilla de jungla", "Placa de presión de jungla", "Botón de jungla", "Tronco de acacia", "Leño de acacia", "Tronco de acacia sin corteza", "Leño de acacia sin corteza", "Valla de acacia", "Puerta de valla de acacia", "Puerta de acacia", "Trampilla de acacia", "Placa de presión de acacia", "Escaleras de roble oscuro", "Losa de roble oscuro", "Valla de roble oscuro", "Puerta de valla de roble oscuro", "Puerta de roble oscuro", "Tablones de mangle", "Placa de presión de mangle", "Botón de mangle", "Tablones de cerezo", "Placa de presión de cerezo", "Botón de cerezo", "Tablones Carmesí", "Tablones distorsionados", "Botón distorsionado", "Escaleras de ladrillos de piedra", "Losa de ladrillos de piedra", "Pared de ladrillos de piedra", "Ladrillos de piedra grabados", "Escaleras de Pizarra profunda labrada", "Losa de Pizarra profunda labrada", "Pared de Pizarra profunda labrada", "Pizarra profunda grabada", "Pizarra profunda pulida", "Ladrillos de Pizarra profunda", "Azulejo de Pizarra profunda rotos", "Escaleras de ladrillos de toba", "Losa de ladrillos de toba", "Pared de ladrillos de toba", "Arenisca lisa", "Escaleras de Arenisca lisa", "Losa de Arenisca lisa", "Arenisca cortada", "Losa de Arenisca cortada", "Basalto", "Piedra negra pulida grabada", "Piedra negra pulida", "Escaleras de piedra pulida", "Losa de piedra negra pulida", "Pared de piedra negra pulida", "Placa de presión de piedra negra pulida", "Botón de piedra negra pulida", "Ladrillos de piedra negra pulida rota", "Bloque de carbón", "Cuarzo", "Escaleras de cuarzo", "Losa de cuarzo", "Cuarzo grabado", "Ladrillos de cuarzo", "Pilar de cuarzo", "Bloque de cuarzo liso", "Escaleras de cuarzo liso", "Losa de cuarzo liso", "Cobre degradado", "Cobre grabado degradado", "Rejilla de cobre degradado", "Cobre cortado degradado", "Escaleras de cobre cortado degradado", "Losa de cobre cortado degradado", "Puerta de cobre degradado", "Trampilla de cobre degradado", "Bombilla de cobre degradado", "Cobre oxidado encerado", "Cobre grabado oxidado encerado", "Rejilla de cobre oxidado encerado", "Cobre cortado oxidado encerado", "Escaleras de cobre cortado oxidado encerado", "Losa de cobre cortado oxidado encerado", "Puerta de cobre oxidado encerado", "Trampilla de cobre oxidado encerado", "Bombilla de cobre oxidado encerado", "Vidrio opaco", "Caja de shulker blanca", "Caja de shulker gris claro", "Caja de shulker gris", "Caja de shulker negra", "Caja de shulker café", "Caja de shulker roja", "Caja de shulker naranja", "Caja de shulker amarilla", "Caja de shulker verde lima", "Caja de shulker verde", "Caja de shulker cian", "Caja de shulker azul claro", "Caja de shulker azul", "Caja de shulker morada", "Caja de shulker magenta", "Caja de shulker rosa", "Bloque de nieve", "Nieve", "Mineral de hierro", "Mineral de hierro de Pizarra profunda", "Mineral de cobre", "Mineral de cobre de Pizarra profunda", "Mineral de esmeralda", "Mineral de esmeralda de Pizarra profunda", "Brote de amatista mediano", "Bloque de algas secas", "Bloque de coral de tubo", "Bloque de coral de cerebro", "Bloque de coral de burbuja", "Bloque de coral de fuego", "Bloque de coral de cuerno", "Bloque de coral de tubo muerto", "Bloque de coral de cerebro muerto", "Bloque de coral de burbuja muerto", "Bloque de coral de fuego muerto", "Bloque de coral de cuerno muerto", "Ranaluz ocre", "Ranaluz verde", "Ranaluz nacarada", "Sculk", "Vena de sculk", "Catalizador de sculk", "Chillador de sculk", "Sensor de sculk", "Telaraña", "Yunque", "Alambique alquímico", "Caldero", "Campana", "Faro", "Canalizador", "Magnetita", "Librería", "Estantería", "Atril", "Online Picture Frame", "Tanque de restauración", "Analizador de fósiles", "Monitor de datos", "Pc", "Maquina de curación", "Bloque de pastoreo", "Cofre dorado", "Cofre dorado amarillo", "Cofre dorado verde", "Cofre dorado azul", "Cofre dorado rosa", "Cofre dorado negro", "Cofre dorado blanco", "Cofre de gimmighoul", "Bolsa de monedas reliquia", "Saco de monedas reliquia", "Estante de exposición", "Mena de piedra Alba", "Mena de piedra Noche", "Mena de piedra fuego del nether", "Mena de piedra fuego", "Mena de piedra hielo", "Mena de piedra hoja", "Mena de piedra Lunar", "Mena de piedra Lunar de espeleotema", "Mena de piedra día", "Mena de piedra solar", "Mena de piedra solar de Terracota", "Mena de piedra Trueno", "Mena de piedra agua", "Mena de piedra Alba de Pizarra profunda", "Mena de piedra Noche de Pizarra profunda", "Mena de piedra fuego de Pizarra profunda", "Mena de piedra hielo de Pizarra profunda", "Mena de piedra hoja de Pizarra profunda", "Mena de piedra Lunar de Pizarra profunda", "Mena de piedra día de Pizarra profunda", "Mena de piedra solar de Pizarra profunda", "Mena de piedra Trueno de Pizarra profunda", "Mena de piedra agua de Pizarra profunda", "Workbench", "Light electricity generator", "Dark electricity generator", "Wrench", "White Sofa", "Light Gray Sofa", "Gray Sofa", "Black Sofa", "Brown Sofa", "Red Sofa", "Orange Sofa", "Yellow Sofa", "Lime Sofa", "Green Sofa", "Cyan Sofa", "Light Blue Sofa", "Blue Sofa", "Purple Sofa", "Magenta Sofa", "Pink Sofa", "White Lamp", "Light Gray Lamp", "Gray Lamp", "Black Lamp", "Brown Lamp", "Red Lamp", "Orange Lamp", "Yellow Lamp", "Lime Lamp", "Green Lamp", "Cyan Lamp", "Light Blue Lamp", "Blue Lamp", "Purple Lamp", "Magenta Lamp", "Pink Lamp", "Oak Light Ceiling Fan", "Spruce Light Ceiling Fan", "Birch Light Ceiling Fan", "Jungle Light Ceiling Fan", "Acacia Light Ceiling Fan", "Dark oak Light Ceiling Fan", "Mangrove Light Ceiling Fan", "Cherry Light Ceiling Fan", "Crimson Light Ceiling Fan", "Warped Light Ceiling Fan", "Oak Dark Ceiling Fan", "Spruce Dark Ceiling Fan", "Birch Dark Ceiling Fan", "Jungle Dark Ceiling Fan", "Acacia Dark Ceiling Fan", "Dark oak Dark Ceiling Fan", "Mangrove Dark Ceiling Fan", "Cherry Dark Ceiling Fan", "Crimson Dark Ceiling Fan", "Warped Dark Ceiling Fan", "Oak Storage Cabinet", "Spruce Storage Cabinet", "Birch Storage Cabinet", "Jungle Storage Cabinet", "Acacia Storage Cabinet", "Dark oak Storage Cabinet", "Mangrove Storage Cabinet", "Cherry Storage Cabinet", "Crimson Storage Cabinet", "Warped Storage Cabinet", "Oak Kitchen Cabinetry", "Spruce Kitchen Cabinetry", "Birch Kitchen Cabinetry", "Jungle Kitchen Cabinetry", "Acacia Kitchen Cabinetry", "Dark oak Kitchen Cabinetry", "Mangrove Kitchen Cabinetry", "Cherry Kitchen Cabinetry", "Crimson Kitchen Cabinetry", "Warped Kitchen Cabinetry", "Oak Kitchen Drawer", "Spruce Kitchen Drawer", "Birch Kitchen Drawer", "Jungle Kitchen Drawer", "Acacia Kitchen Drawer", "Dark oak Kitchen Drawer", "Mangrove Kitchen Drawer", "Cherry Kitchen Drawer", "Crimson Kitchen Drawer", "Warped Kitchen Drawer", "Oak Kitchen Sink", "Spruce Kitchen Sink", "Birch Kitchen Sink", "Jungle Kitchen Sink", "Acacia Kitchen Sink", "Dark oak Kitchen Sink", "Mangrove Kitchen Sink", "Cherry Kitchen Sink", "Crimson Kitchen Sink", "Warped Kitchen Sink", "Oak Kitchen Storage Cabinet", "Spruce Kitchen Storage Cabinet", "Birch Kitchen Storage Cabinet", "Jungle Kitchen Storage Cabinet", "Acacia Kitchen Storage Cabinet", "Dark oak Kitchen Storage Cabinet", "Mangrove Kitchen Storage Cabinet", "Cherry Kitchen Storage Cabinet", "Crimson Kitchen Storage Cabinet", "Warped Kitchen Storage Cabinet", "White Kitchen Cabinetry", "Light Gray Kitchen Cabinetry", "Gray Kitchen Cabinetry", "Black Kitchen Cabinetry", "Brown Kitchen Cabinetry", "Red Kitchen Cabinetry", "Orange Kitchen Cabinetry", "Yellow Kitchen Cabinetry", "Lime Kitchen Cabinetry", "Green Kitchen Cabinetry", "Cyan Kitchen Cabinetry", "Light Blue Kitchen Cabinetry", "Blue Kitchen Cabinetry", "Purple Kitchen Cabinetry", "Magenta Kitchen Cabinetry", "Pink Kitchen Cabinetry", "White Kitchen Drawer", "Light Gray Kitchen Drawer", "Gray Kitchen Drawer", "Black Kitchen Drawer", "Brown Kitchen Drawer", "Red Kitchen Drawer", "Orange Kitchen Drawer", "Yellow Kitchen Drawer", "Lime Kitchen Drawer", "Green Kitchen Drawer", "Cyan Kitchen Drawer", "Light Blue Kitchen Drawer", "Blue Kitchen Drawer", "Purple Kitchen Drawer", "Magenta Kitchen Drawer", "Pink Kitchen Drawer", "White Kitchen Sink", "Light Gray Kitchen Sink", "Gray Kitchen Sink", "Black Kitchen Sink", "Brown Kitchen Sink", "Red Kitchen Sink", "Orange Kitchen Sink", "Yellow Kitchen Sink", "Lime Kitchen Sink", "Green Kitchen Sink", "Cyan Kitchen Sink", "Light Blue Kitchen Sink", "Blue Kitchen Sink", "Purple Kitchen Sink", "Magenta Kitchen Sink", "Pink Kitchen Sink", "White Kitchen Storage Cabinet", "Light Gray Kitchen Storage Cabinet", "Gray Kitchen Storage Cabinet", "Black Kitchen Storage Cabinet", "Brown Kitchen Storage Cabinet", "Red Kitchen Storage Cabinet", "Orange Kitchen Storage Cabinet", "Yellow Kitchen Storage Cabinet", "Lime Kitchen Storage Cabinet", "Green Kitchen Storage Cabinet", "Cyan Kitchen Storage Cabinet", "Light Blue Kitchen Storage Cabinet", "Blue Kitchen Storage Cabinet", "Purple Kitchen Storage Cabinet", "Magenta Kitchen Storage Cabinet", "Pink Kitchen Storage Cabinet", "Oak Mailbox", "Spruce Mailbox", "Birch Mailbox", "Jungle Mailbox", "Acacia Mailbox", "Dark oak Mailbox", "Mangrove Mailbox", "Cherry Mailbox", "Crimson Mailbox", "Warped Mailbox", "Oak Lattice Fence", "Spruce Lattice Fence", "Birch Lattice Fence", "Jungle Lattice Fence", "Acacia Lattice Fence", "Dark oak Lattice Fence", "Mangrove Lattice Fence", "Cherry Lattice Fence", "Crimson Lattice Fence", "Warped Lattice Fence", "Oak Lattice Fence Gate", "Spruce Lattice Fence Gate", "Birch Lattice Fence Gate", "Jungle Lattice Fence Gate", "Acacia Lattice Fence Gate", "Dark oak Lattice Fence Gate", "Mangrove Lattice Fence Gate", "Cherry Lattice Fence Gate", "Crimson Lattice Fence Gate", "Warped Lattice Fence Gate", "Door Mat", "Oak Basin", "Spruce Basin", "Birch Basin", "Jungle Basin", "Acacia Basin", "Dark oak Basin", "Mangrove Basin", "Cherry Basin", "Crimson Basin", "Warped Basin", "White Basin", "Light Gray Basin", "Gray Basin", "Black Basin", "Brown Basin", "Red Basin", "Orange Basin", "Yellow Basin", "Lime Basin", "Green Basin", "Cyan Basin", "Light Blue Basin", "Blue Basin", "Purple Basin", "Magenta Basin", "Pink Basin", "Light Ceiling Light", "Dark Ceiling Light", "Light Lightswitch", "Dark Lightswitch", "Doorbell", "Television Remote", "Vidrio etéreo opaco", "Vidrio etéreo reverso opaco", "Vidrio etéreo", "Vidrio etéreo reverso", "Vidrio espectral", "Vidrio luminoso", "Vidrio de redstone", "Obsidian glass", "Glass with stone frame", "Glass with sandstone frame", "Glass door", "Tinted Ethereal Glass Door", "Tinted Reverse Ethereal Glass Door", "Ethereal Glass Door", "Ethereal Reverse Glass Door", "Luminous Glass door", "Redstone Glass door", "Ghostly Glass door", "Obsidian Glass door", "Glass TrapDoor", "Tinted Ethereal Glass TrapDoor", "Tinted Reverse Ethereal Glass TrapDoor", "Ethereal Glass TrapDoor", "Ethereal Reverse Glass TrapDoor", "Redstone Glass TrapDoor", "Ghostly Glass TrapDoor", "Luminous Glass TrapDoor", "Obsidian Glass TrapDoor", "Tinted Ethereal Glass Pane", "Tinted Reverse Ethereal Glass Pane", "Ethereal Glass Pane", "Reverse Ethereal Glass Pane", "Redstone Glass Pane", "Ghostly Glass Pane", "Luminous Glass Pane", "White Glass Door", "Light Gray Glass Door", "Gray Glass Door", "Black Glass Door", "Brown Glass Door", "Red Glass Door", "Orange Glass Door", "Yellow Glass Door", "Lime Glass Door", "Green Glass Door", "Cyan Glass Door", "Light Blue Glass Door", "Blue Glass Door", "Purple Glass Door", "Magenta Glass Door", "Pink Glass Door", "Tinted Glass Door", "White Glass TrapDoor", "Light Gray Glass TrapDoor", "Gray Glass TrapDoor", "Black Glass TrapDoor", "Brown Glass TrapDoor", "Red Glass TrapDoor", "Orange Glass TrapDoor", "Yellow Glass TrapDoor", "Lime Glass TrapDoor", "Green Glass TrapDoor", "Cyan Glass TrapDoor", "Light Blue Glass TrapDoor", "Blue Glass TrapDoor", "Purple Glass TrapDoor", "Magenta Glass TrapDoor", "Pink Glass TrapDoor", "Tinted Glass TrapDoor", "Glass slab", "Horno", "Campana de cocina", "Tubo de Campana de cocina", "Tarro de mermelada de bayas", "Libro apilable", "Banco de acacia", "Banco de bambú", "Banco de abedul", "Banco de cerezo", "Banco de carmesí", "Banco de roble oscuro", "Banco de selva", "Banco de manglar", "Banco de roble", "Banco de abeto", "Banco de madera distorsionada", "Sofá de acacia", "Sofá de bambú", "Sofá de abedul", "Sofá de cerezo", "Sofá de carmesí", "Sofá de roble oscuro", "Sofá de selva", "Sofá de manglar", "Sofá de roble", "Sofá de abeto", "Sofá de madera distorsionada", "Silla de acacia", "Silla de bambú", "Silla de abedul", "Silla de cerezo", "Silla de carmesí", "Silla de roble oscuro", "Silla de selva", "Silla de manglar", "Silla de roble", "Silla de abeto", "Silla de madera distorsionada", "Banco de comedor de acacia", "Banco de comedor de bambú", "Banco de comedor de abedul", "Banco de comedor de cerezo", "Banco de comedor de carmesí", "Banco de comedor de roble oscuro", "Banco de comedor de selva", "Banco de comedor de manglar", "Banco de comedor de roble", "Banco de comedor de abeto", "Banco de comedor de madera distorsionada", "Banco", "Banco congelado", "Mesa auxiliar de acacia", "Mesa auxiliar de bambú", "Mesa auxiliar de abedul", "Mesa auxiliar de cerezo", "Mesa auxiliar de carmesí", "Mesa auxiliar de roble oscuro", "Mesa auxiliar de selva", "Mesa auxiliar de manglar", "Mesa auxiliar de roble", "Mesa auxiliar de abeto", "Mesa auxiliar de madera distorsionada", "Escritorio de acacia", "Escritorio de bambú", "Escritorio de abedul", "Escritorio de cerezo", "Escritorio de carmesí", "Escritorio de roble oscuro", "Escritorio de selva", "Escritorio de manglar", "Escritorio de roble", "Escritorio de abeto", "Escritorio de madera distorsionada", "Mesa de noche de acacia", "Mesa de noche de bambú", "Mesa de noche de abedul", "Mesa de noche de cerezo", "Mesa de noche de carmesí", "Mesa de noche de roble oscuro", "Mesa de noche de selva", "Mesa de noche de manglar", "Mesa de noche de roble", "Mesa de noche de abeto", "Mesa de noche de madera distorsionada", "Mesa de acacia", "Mesa de bambú", "Mesa de abedul", "Mesa de cerezo", "Mesa de carmesí", "Mesa de roble oscuro", "Mesa de selva", "Mesa de manglar", "Mesa de roble", "Mesa de abeto", "Mesa de madera distorsionada", "Mostrador de acacia", "Mostrador de bambú", "Mostrador de abedul", "Mostrador de cerezo", "Mostrador de carmesí", "Mostrador de roble oscuro", "Mostrador de selva", "Mostrador de manglar", "Mostrador de roble", "Mostrador de abeto", "Mostrador de madera distorsionada", "Armario de acacia", "Armario de bambú", "Armario de abedul", "Armario de cerezo", "Armario de carmesí", "Armario de roble oscuro", "Armario de selva", "Armario de manglar", "Armario de roble", "Armario de abeto", "Armario de madera distorsionada", "Estante de acacia", "Estante de bambú", "Estante de abedul", "Estante de cerezo", "Estante de carmesí", "Estante de roble oscuro", "Estante de selva", "Estante de manglar", "Estante de roble", "Estante de abeto", "Estante de madera distorsionada", "Remate de Pilar de acacia", "Remate de Pilar de bambú", "Remate de Pilar de abedul", "Remate de Pilar de cerezo", "Remate de Pilar de carmesí", "Remate de Pilar de roble oscuro", "Remate de Pilar de selva", "Remate de Pilar de manglar", "Remate de Pilar de roble", "Remate de Pilar de abeto", "Remate de Pilar de madera distorsionada", "Remate de Esquina de acacia", "Remate de Esquina de bambú", "Remate de Esquina de abedul", "Remate de Esquina de cerezo", "Remate de Esquina de carmesí", "Remate de Esquina de roble oscuro", "Remate de Esquina de selva", "Remate de Esquina de manglar", "Remate de Esquina de roble", "Remate de Esquina de abeto", "Remate de Esquina de madera distorsionada", "Taza Blanca", "Taza Amarilla", "Taza Azul", "Taza de Madera", "Taza de Terracota", "Plato blanco", "Plato amarillo", "Plato azul", "Plato de madera", "Plato de Terracota", "Cuenco blanco", "Cuenco amarillo", "Cuenco azul", "Cuenco de madera", "Cuenco de Terracota", "Combo de vajilla blanca", "Combo de vajilla amarilla", "Combo de vajilla azul", "Combo de vajilla de madera", "Combo de vajilla de Terracota", "Oak Rail Bridge", "Spruce Rail Bridge", "Birch Rail Bridge", "Jungle Rail Bridge", "Acacia Rail Bridge", "Dark oak Rail Bridge", "Mangrove Rail Bridge", "Cherry Rail Bridge", "Crimson Rail Bridge", "Warped Rail Bridge", "Bamboo Bridge", "Dry Bamboo Bridge", "Iron Bridge Support", "Oak Bridge Support", "Spruce Bridge Support", "Birch Bridge Support", "Jungle Bridge Support", "Acacia Bridge Support", "Dark oak Bridge Support", "Mangrove Bridge Support", "Cherry Bridge Support", "Crimson Bridge Support", "Warped Bridge Support", "Asian Red Bridge pier", "Glass Bridge pier", "brick Bridge Support", "Sandstone Bridge Support", "Stone Bridge Support", "Red Sandstone Bridge Support", "Blackstone Bridge Support", "Mossy Stone Bridge Support", "Deepslate Bricks Bridge Support", "Deepslate Tile Bridge Support", "Mud Bricks Bridge Support", "Bamboo Bridge Support", "Dry Bamboo Bridge Support", "Cobblestone Bridge pier", "Mossy Cobblestone Bridge pier", "Andesite Bridge pier", "Granite Bridge pier", "Diorite Bridge pier", "Prismarine Bricks Bridge pier", "nether Bricks Bridge pier", "End Stone Bricks Bridge pier"
+
+            ],
+
+            "Caro": [
+
+                "Tronco de jungla", "Leño de jungla", "Tronco de jungla sin corteza", "Leño de jungla sin corteza", "Escaleras de jungla", "Losa de jungla", "Valla de jungla", "Puerta de valla de jungla", "Puerta de jungla", "Tronco de roble oscuro", "Leño de roble oscuro", "Tronco de roble oscuro sin corteza", "Leño de roble oscuro sin corteza", "Tablones de roble oscuro", "Tronco de mangle", "Leño de mangle", "Tronco de mangle sin corteza", "Leño de mangle sin corteza", "Tronco de cerezo", "Leño de cerezo", "Tronco de cerezo sin corteza", "Leño de cerezo sin corteza", "Escaleras de cerezo", "Losa de cerezo", "Valla de cerezo", "Puerta de valla de cerezo", "Puerta de cerezo", "Trampilla de cerezo", "Tallo Carmesí", "Hifas Carmesí", "Tallos Carmesí sin corteza", "Hifas Carmesí sin corteza", "Escaleras Carmesí", "Losa Carmesí", "Valla Carmesí", "Puerta de valla Carmesí", "Puerta Carmesí", "Trampilla Carmesí", "Placa de presión Carmesí", "Botón de Carmesí", "Tallo distorsionado", "Hifas distorsionadas", "Tallo distorsionado sin corteza", "Hifas distorsionadas sin corteza", "Escaleras distorsionadas", "Losa distorsionada", "Valla distorsionada", "Puerta de valla distorsionada", "Puerta distorsionada", "Trampilla distorsionada", "Placa de presión distorsionada", "Ladrillos de piedra", "Escaleras de Pizarra profunda pulida", "Losa de Pizarra profunda pulida", "Pared de Pizarra profunda pulida", "Escaleras de ladrillos de Pizarra profunda", "Losa de ladrillos de Pizarra profunda", "Pared de ladrillos de Pizarra profunda", "Azulejo de Pizarra profunda", "Linterna marina", "Prismarina", "Escaleras de Prismarina", "Losa de Prismarina", "Pared de Prismarina", "Ladrillos de Prismarina", "Escaleras de ladrillos de Prismarina", "Losa de ladrillos de Prismarina", "Ladrillos del nether rotos", "Basalto liso", "Basalto pulido", "Piedra negra áurea", "Ladrillos de piedra negra pulida", "Escaleras de ladrillos de piedra negra pulida", "Losa de ladrillos de piedra negra pulida", "Pared de ladrillos de piedra negra pulida", "Bloque de lapislázuli", "Bloque de amatista", "Cobre expuesto", "Cobre grabado expuesto", "Rejilla de cobre expuesto", "Cobre cortado expuesto", "Escaleras de cobre cortado expuesto", "Losa de cobre cortado expuesto", "Puerta de cobre expuesto", "Trampilla de cobre expuesto", "Bombilla de cobre expuesto", "Cobre degradado encerado", "Cobre grabado degradado encerado", "Rejilla de cobre degradado encerado", "Cobre cortado degradado encerado", "Escaleras de cobre cortado degradado encerado", "Losa de cobre cortado degradado encerado", "Puerta de cobre degradado encerado", "Trampilla de cobre degradado encerado", "Bombilla de cobre degradado encerado", "Cama blanca", "Cama gris claro", "Cama gris", "Cama negra", "Cama café", "Cama roja", "Cama naranja", "Cama amarilla", "Cama verde lima", "Cama verde", "Cama cian", "Cama azul claro", "Cama azul", "Cama morada", "Cama magenta", "Cama rosa", "Micelio", "Obsidiana", "Obsidiana llorosa", "Mineral de oro", "Mineral de oro de Pizarra profunda", "Mineral de oro del Nether", "Mineral de cuarzo del nether", "Brote de amatista grande", "Pararrayos", "Bloque de piedra Alba", "Bloque de piedra Noche", "Bloque de piedra fuego", "Bloque de piedra hielo", "Bloque de piedra hoja", "Bloque de piedra Lunar", "Bloque de piedra día", "Bloque de piedra solar", "Bloque de piedra Trueno", "Bloque de piedra agua", "Light Fridge", "Dark Fridge", "Light Toaster", "Dark Toaster", "Light Microwave", "Dark Microwave", "Light Stove", "Dark Stove", "Light Range Hood", "Dark Range Hood", "Frying Pan", "Recycle Bin", "Post Box", "White Trampoline", "Light Gray Trampoline", "Gray Trampoline", "Black Trampoline", "Brown Trampoline", "Red Trampoline", "Orange Trampoline", "Yellow Trampoline", "Lime Trampoline", "Green Trampoline", "Cyan Trampoline", "Light Blue Trampoline", "Blue Trampoline", "Purple Trampoline", "Magenta Trampoline", "Pink Trampoline", "Oak Toilet", "Spruce Toilet", "Birch Toilet", "Jungle Toilet", "Acacia Toilet", "Dark oak Toilet", "Mangrove Toilet", "Cherry Toilet", "Crimson Toilet", "Warped Toilet", "White Toilet", "Light Gray Toilet", "Gray Toilet", "Black Toilet", "Brown Toilet", "Red Toilet", "Orange Toilet", "Yellow Toilet", "Lime Toilet", "Green Toilet", "Cyan Toilet", "Light Blue Toilet", "Blue Toilet", "Purple Toilet", "Magenta Toilet", "Pink Toilet", "Oak Bath", "Spruce Bath", "Birch Bath", "Jungle Bath", "Acacia Bath", "Dark oak Bath", "Mangrove Bath", "Cherry Bath", "Crimson Bath", "Warped Bath", "White Bath", "Light Gray Bath", "Gray Bath", "Black Bath", "Brown Bath", "Red Bath", "Orange Bath", "Yellow Bath", "Lime Bath", "Green Bath", "Cyan Bath", "Light Blue Bath", "Blue Bath", "Purple Bath", "Magenta Bath", "Pink Bath", "Television", "Computer", "Cama elegante de acacia", "Cama elegante de bambú", "Cama elegante de abedul", "Cama elegante de cerezo", "Cama elegante de carmesí", "Cama elegante de roble oscuro", "Cama elegante de selva", "Cama elegante de manglar", "Cama elegante de roble", "Cama elegante de abeto", "Cama elegante de madera distorsionada", "Remate de Pilar de Andesita", "Remate de Pilar de Piedra Negra", "Remate de Pilar de Ladrillos", "Remate de Pilar de Calcita", "Remate de Pilar de Pizarra profunda", "Remate de Pilar de Diorita", "Remate de Pilar de Piedra Goteante", "Remate de Pilar de Granito", "Remate de Pilar de Cuarzo", "Remate de Pilar de Piedra", "Remate de Pilar de Arenisca", "Remate de Pilar de Arenisca roja", "Remate de Esquina de Andesita", "Remate de Esquina de Piedra Negra", "Remate de Esquina de Ladrillos", "Remate de Esquina de Calcita", "Remate de Esquina de Pizarra profunda", "Remate de Esquina de Diorita", "Remate de Esquina de Piedra Goteante", "Remate de Esquina de Granito", "Remate de Esquina de Cuarzo", "Remate de Esquina de Piedra", "Remate de Esquina de Arenisca", "Remate de Esquina de Arenisca roja", "Trofeo de oso", "Trofeo de blaze", "Trofeo de zorro", "Trofeo de cabra", "Trofeo de pez globo", "Trofeo de Salmón", "Trofeo de pez plateado", "Trofeo de caballo esqueleto", "Trofeo de Araña", "Trofeo de pez tropical", "Trofeo de esqueleto de wither", "Trofeo de Lobo", "Trofeo de fantasma", "Trofeo de Creeper", "Trofeo de esqueleto", "Trofeo de evocador", "Trofeo de Saqueador", "Trofeo de vindicador", "Trofeo de bruja", "Iron Bridge", "Oak Bridge", "Birch Bridge", "Acacia Bridge", "Spruce Bridge", "Jungle Bridge", "Dark Oak Bridge", "Crimson Bridge", "Warped Bridge", "Mangrove Bridge", "Cherry Bridge", "Rope Iron Bridge", "Rope Oak Bridge", "Rope Birch Bridge", "Rope Acacia Bridge", "Rope Spruce Bridge", "Rope Jungle Bridge", "Rope Dark Oak Bridge", "Rope Crimson Bridge", "Rope Warped Bridge", "Rope Mangrove Bridge", "Rope Cherry Bridge", "Brick Bridge", "Sandstone Bridge", "Stone Brick Bridge", "Red Sandstone Bridge", "Blackstone Bridge", "Mossy Stone Brick Bridge", "Deepslate Brick Bridge", "Deepslate tile Bridge", "Mud Brick Bridge", "Cobblestone Bridge", "Mossy Cobblestone Bridge", "Andesite Bridge", "Granite Bridge", "Diorite Bridge", "Prismarine Bricks Bridge", "Nether Bricks Bridge", "End Stone Bricks Bridge", "Asian Red Bridge", "Glass Bridge", "Balustrade stone bricks Bridge", "Balustrade Sandstone Bridge", "Balustrade bricks Bridge", "Balustrade Red Sandstone Bridge", "Balustrade Blackstone Bridge", "Balustrade Mossy Stone Bricks Bridge", "Balustrade Deepslate Bricks Bridge", "Balustrade Deepslate Tiles Bridge", "Balustrade Mud Bricks Bridge", "Balustrade Cobblestone Bridge", "Balustrade Mossy Cobblestone Bridge", "Balustrade Andesite Bridge", "Balustrade Granite Bridge", "Balustrade Diorite Bridge", "Balustrade Prismarine Bricks Bridge", "Balustrade nether Bricks Bridge", "Balustrade End Stone Bricks Bridge", "Iron Bridge Stair", "Oak Bridge Stair", "Spruce Bridge Stair", "Birch Bridge Stair", "Jungle Bridge Stair", "Acacia Bridge Stair", "Dark oak Bridge Stair", "Mangrove Bridge Stair", "Cherry Bridge Stair", "Crimson Bridge Stair", "Warped Bridge Stair", "Rope Oak Bridge Stair", "Rope Spruce Bridge Stair", "Rope Birch Bridge Stair", "Rope Jungle Bridge Stair", "Rope Acacia Bridge Stair", "Rope Dark oak Bridge Stair", "Rope Mangrove Bridge Stair", "Rope Cherry Bridge Stair", "Rope Crimson Bridge Stair", "Rope Warped Bridge Stair", "Asian Red Bridge Stair", "Glass Bridge Stair", "brick Bridge Stair", "Sandstone Bridge Stair", "Stone brick Bridge Stair", "Red Sandstone Bridge Stair", "Blackstone Bridge Stair", "Mossy Stone Bridge Stair", "Deepslate Brick Bridge Stair", "Deepslate Tile Bridge Stair", "Mud Brick Bridge Stair", "Bamboo Bridge Stair", "Dry Bamboo Bridge Stair", "Cobblestone Bridge Stair", "Mossy Cobblestone Bridge Stair", "Andesite Bridge Stair", "Granite Bridge Stair", "Diorite Bridge Stair", "Prismarine Bricks Bridge Stair", "nether Bricks Bridge Stair", "End Stone Bricks Bridge Stair"
+
+            ],
+
+            "Muy caro": [
+
+                "Escaleras de mangle", "Losa de mangle", "Valla de mangle", "Puerta de valla de mangle", "Puerta de mangle", "Trampilla de mangle", "Escaleras de azulejo de Pizarra profunda", "Losa de azulejo de Pizarra profunda", "Pared de azulejo de Pizarra profunda", "Prismarina oscura", "Escaleras de Prismarina oscura", "Losa de Prismarina oscura", "Ladrillos del nether", "Escaleras de ladrillos del nether", "Losa de ladrillos del nether", "Pared de ladrillos del nether", "Valla de ladrillos del nether", "Ladrillos del nether grabado", "Ladrillos del nether rojos", "Escaleras de ladrillos del nether rojos", "Losa de ladrillos del nether rojos", "Pared de ladrillos del nether rojos", "Bloque de cobre", "Cobre grabado", "Rejilla de cobre", "Cobre cortado", "Escaleras de cobre cortado", "Losa de cobre cortado", "Puerta de cobre", "Trampilla de cobre", "Bombilla de cobre", "Cobre expuesto encerado", "Cobre grabado expuesto encerado", "Rejilla de cobre expuesto encerado", "Cobre cortado expuesto encerado", "Escaleras de cobre cortado expuesto encerado", "Losa de cobre cortado expuesto encerado", "Puerta de cobre expuesto encerado", "Trampilla de cobre expuesto encerado", "Bombilla de cobre expuesto encerado", "Mineral de diamante", "Mineral de diamante de Pizarra profunda", "Escombros ancestrales", "Bloque de hierro en bruto", "Bloque de cobre en bruto", "Bloque de oro en bruto", "Racimo de amatista", "Cofre de ender", "Nexo de reparación", "Estandarte de mal prestigio", "Ascensor blanco", "Ascensor gris claro", "Ascensor gris", "Ascensor negro", "Ascensor café", "Ascensor rojo", "Ascensor naranja", "Ascensor amarillo", "Ascensor verde lima", "Ascensor verde", "Ascensor cian", "Ascensor azul claro", "Ascensor azul", "Ascensor morado", "Ascensor magenta", "Ascensor rosa", "White Grill", "Light Gray Grill", "Gray Grill", "Black Grill", "Brown Grill", "Red Grill", "Orange Grill", "Yellow Grill", "Lime Grill", "Green Grill", "Cyan Grill", "Light Blue Grill", "Blue Grill", "Purple Grill", "Magenta Grill", "Pink Grill"
+
+            ],
+
+            "Extremadamente caro": [
+
+                "Piedra del end", "Ladrillos de piedra del end", "Escaleras de ladrillos de piedra del end", "Losa de ladrillos de piedra del end", "Pared de ladrillos de piedra del end", "Purpur", "Pilar de purpur", "Escaleras de purpur", "Losa de purpur", "Bloque de hierro", "Barras de hierro", "Puerta de hierro", "Trampilla de hierro", "Placa de presión para peso elevado", "Cadena", "Bloque de oro", "Placa de presión para peso liviano", "Bloque de esmeralda", "Bloque de diamante", "Bloque de netherita", "Bloque de cobre encerado", "Cobre grabado encerado", "Rejilla de cobre encerado", "Cobre cortado encerado", "Escaleras de cobre cortado encerado", "Losa de cobre cortado encerado", "Puerta de cobre encerado", "Trampilla de cobre encerado", "Bombilla de cobre encerado", "Cristal del end", "Cráneo de esqueleto", "Cráneo de whiter", "Cabeza de jugador", "Cabeza de Zombi", "Cabeza de Creeper", "Cabeza de Piglin", "Cabeza de dragón", "Huevo de dragón", "Marco del portal del end", "Arcón", "Generador", "Generador de desafío"
+
+            ]
+
+        };
+
+        // Crear una lista plana para la búsqueda
+
+        const inventory = Object.entries(listData).flatMap(([listName, items]) => 
+
+            items.map(itemName => ({ name: itemName, list: listName }))
+
+        );
+
+        
+
+        // Función auxiliar para mapear el nombre de la lista a una clase CSS
+
+        function getListClass(listName) {
+
+            if (listName.includes('Extremadamente barato')) return 'tag-ext-barato';
+
+            if (listName.includes('Muy barato')) return 'tag-muy-barato';
+
+            if (listName.includes('Barato')) return 'tag-barato';
+
+            if (listName.includes('Medio')) return 'tag-medio';
+
+            if (listName.includes('Caro')) return 'tag-caro';
+
+            if (listName.includes('Muy caro')) return 'tag-muy-caro';
+
+            if (listName.includes('Extremadamente caro')) return 'tag-ext-caro'; 
+
+            return 'bg-gray-400 text-gray-800'; // Fallback
+
+        }
+
+        // --- FUNCIONES DE CÁLCULO DE TOTALES ---
+
+        
+
+        function calculateTotal() {
+
+            let baseTotal = 0;
+
+            savedItems.forEach(item => {
+
+                const costPerItem = parseFloat(listCosts[item.list]) || 0;
+
+                const quantity = parseInt(item.quantity) || 0;
+
+                
+
+                // Cálculo: Cantidad * Precio de Lista
+
+                const subtotal = quantity * costPerItem; 
+
+                baseTotal += subtotal;
+
+                
+
+                // Actualizar el subtotal mostrado en el DOM si el elemento existe
+
+                const subtotalElement = document.getElementById(`subtotal-${normalizeString(item.name)}`);
+
+                if (subtotalElement) {
+
+                    subtotalElement.textContent = subtotal.toLocaleString('es-MX'); // Formato de moneda
+
+                }
+
+            });
+
+            // Aplicar multiplicador de ubicación
+
+            const selectedLocation = locationSelect.value;
+
+            const multiplier = parseFloat(locationMultipliers[selectedLocation]) || 0;
+
+            const finalTotal = baseTotal * multiplier;
+
+            // Renderizar totales
+
+            baseTotalSpan.textContent = baseTotal.toLocaleString('es-MX');
+
+            finalTotalSpan.textContent = finalTotal.toLocaleString('es-MX');
+
+        }
+
+        // --- FUNCIONES DE CONFIGURACIÓN DE INTERFAZ ---
+
+        
+
+        function renderCostConfig() {
+
+            costConfigContainer.innerHTML = listNames.map(name => `
+
+                <div class="flex items-center justify-between">
+
+                    <label class="text-sm font-semibold">${name}:</label>
+
+                    <input type="number" id="cost-${normalizeString(name)}" 
+
+                           value="${listCosts[name] || 0}" 
+
+                           oninput="updateListCost('${name}', this.value)"
+
+                           class="config-input w-24 text-right">
+
+                </div>
+
+            `).join('');
+
+        }
+
+        
+
+        function updateListCost(listName, value) {
+
+            listCosts[listName] = parseFloat(value) || 0;
+
+            saveConfig();
+
+            // No es necesario llamar a renderCostConfig, ya que solo cambió el valor del input
+
+        }
+
+        function renderLocationConfig() {
+
+            locationConfigContainer.innerHTML = locationNames.map(name => `
+
+                <div class="flex items-center justify-between">
+
+                    <label class="text-sm font-semibold">${name} (x):</label>
+
+                    <input type="number" step="0.01" id="multiplier-${normalizeString(name)}" 
+
+                           value="${locationMultipliers[name] || 1.0}" 
+
+                           oninput="updateLocationMultiplier('${name}', this.value)"
+
+                           class="config-input w-24 text-right">
+
+                </div>
+
+            `).join('');
+
+            
+
+            // Llenar el Select de Ubicación
+
+            locationSelect.innerHTML = locationNames.map(name => `
+
+                <option value="${name}">${name} (x${locationMultipliers[name] || 1.0})</option>
+
+            `).join('');
+
+            
+
+            // Restaurar la selección anterior si existe
+
+            const storedLocation = localStorage.getItem('selectedLocation');
+
+            if (storedLocation && locationNames.includes(storedLocation)) {
+
+                locationSelect.value = storedLocation;
+
+            }
+
+        }
+
+        
+
+        function updateLocationMultiplier(locationName, value) {
+
+            locationMultipliers[locationName] = parseFloat(value) || 0;
+
+            saveConfig();
+
+            renderLocationConfig(); // Se re-renderiza para actualizar el multiplicador en el SELECT
+
+        }
+
+        
+
+        // Manejar el cambio en el select (guarda la selección y recalcula)
+
+        locationSelect.onchange = function() {
+
+            localStorage.setItem('selectedLocation', this.value);
+
+            calculateTotal();
+
+        }
+
+        
+
+        // --- FUNCIONES DE ÍTEMS GUARDADOS/HISTORIAL (MODIFICADAS) ---
+
+        window.updateItemQuantity = function(itemName, value) {
+
+            const normalizedName = normalizeString(itemName);
+
+            const itemIndex = savedItems.findIndex(item => normalizeString(item.name) === normalizedName);
+
+            
+
+            if (itemIndex !== -1) {
+
+                savedItems[itemIndex].quantity = parseInt(value) || 0;
+
+                saveSavedItems(); // Guarda y recalcula el total
+
+            }
+
+        }
+
+        function saveItem(item) {
+
+            if (!savedItems.some(saved => normalizeString(saved.name) === normalizeString(item.name))) {
+
+                // Agregar el campo de cantidad al guardar
+
+                savedItems.push({ ...item, quantity: 1 }); 
+
+                saveSavedItems(); // Guardar el nuevo ítem
+
+                renderSavedItems();
+
+            } else {
+
+                alert(`¡${item.name} ya está en la lista de ítems guardados!`);
+
+            }
+
+        }
+
+        window.deleteItem = function(itemName) {
+
+            savedItems = savedItems.filter(item => normalizeString(item.name) !== normalizeString(itemName));
+
+            saveSavedItems(); // Guarda los cambios
+
+            renderSavedItems();
+
+        }
+
+        function renderSavedItems() {
+
+            if (savedItems.length === 0) {
+
+                savedItemsContainer.innerHTML = '';
+
+                noSavedItems.classList.remove('hidden');
+
+                calculateTotal(); // Recalcula si la lista queda vacía
+
+                return;
+
+            }
+
+            noSavedItems.classList.add('hidden');
+
+            
+
+            savedItemsContainer.innerHTML = savedItems.map(item => {
+
+                const tagClass = getListClass(item.list);
+
+                const costPerItem = parseFloat(listCosts[item.list]) || 0;
+
+                const quantity = parseInt(item.quantity) || 0;
+
+                const subtotal = quantity * costPerItem;
+
+                const itemId = normalizeString(item.name);
+
+                
+
+                return `
+
+                    <div class="result-item-pk flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4 bg-gray-50 !p-3 !rounded-lg">
+
+                        
+
+                        <div class="text-center sm:text-left z-20 flex-grow basis-1/3">
+
+                            <p class="result-name-pk !text-lg !mb-1">${item.name}</p>
+
+                            <span class="result-tag-pk rounded-full ${tagClass} !text-xs !p-1.5">${item.list}</span>
+
+                            <span class="text-xs font-semibold block mt-1">Precio Unitario: ${costPerItem.toLocaleString('es-MX')}</span>
+
+                        </div>
+
+                        
+
+                        <div class="flex flex-col items-center z-20 flex-shrink-0 basis-1/3">
+
+                            <label class="text-sm font-semibold mb-1">CANTIDAD (QTY)</label>
+
+                            <input type="number" min="0" value="${item.quantity}" 
+
+                                   oninput="updateItemQuantity('${item.name.replace(/'/g, "\\'")}', this.value)"
+
+                                   class="qty-input">
+
+                        </div>
+
+                        
+
+                        <div class="flex flex-col items-center sm:items-end z-20 flex-shrink-0 basis-1/3 space-y-2">
+
+                            <p class="text-md font-bold text-poke-dark">
+
+                                Subtotal: <span id="subtotal-${itemId}" class="text-poke-blue">${subtotal.toLocaleString('es-MX')}</span>
+
+                            </p>
+
+                            <button class="delete-button-pk text-xs !py-1 !px-2" onclick="deleteItem('${item.name.replace(/'/g, "\\'")}')">
+
+                                ELIMINAR 🗑️
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }).join('');
+
+            
+
+            calculateTotal(); // Recalcula el total después de renderizar
+
+        }
+
+        
+
+        // --- FUNCIONES DE BÚSQUEDA Y RENDERIZADO (MANTENIDAS) ---
+
+        
+
+        function handleInput() {
+
+            const query = normalizeString(searchInput.value);
+
+            
+
+            if (query.length > 0) {
+
+                showSuggestions(query);
+
+            } else {
+
+                suggestionsContainer.innerHTML = '';
+
+                resultsContainer.innerHTML = '';
+
+                initialMessage.classList.remove('hidden');
+
+                return;
+
+            }
+
+            searchInventory();
+
+        }
+
+        function searchInventory() {
+
+            // ... (Se mantiene la lógica de búsqueda exacta) ...
+
+            const query = normalizeString(searchInput.value);
+
+            resultsContainer.innerHTML = '';
+
+            
+
+            if (query.length === 0) {
+
+                return;
+
+            }
+
+            initialMessage.classList.add('hidden');
+
+            const filteredResults = inventory.filter(item => {
+
+                const itemName = normalizeString(item.name);
+
+                return itemName === query;
+
+            });
+
+            renderResults(filteredResults);
+
+        }
+
+        function renderResults(results) {
+
+            // ... (Se mantiene la lógica de renderizado de resultados) ...
+
+            if (results.length === 0) {
+
+                resultsContainer.innerHTML = `
+
+                    <div class="p-6 rounded-xl text-center text-xl no-results-pk shadow-lg">
+
+                        <p class="font-extrabold text-2xl">¡Error de Búsqueda!</p>
+
+                        <p class="text-base mt-2">Ese ítem no se encontró en el Pokédex de Costos.</p>
+
+                        <p class="text-base mt-1 font-semibold">Recuerda la Coincidencia Exacta.</p>
+
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+            resultsContainer.innerHTML = results.map(item => {
+
+                const tagClass = getListClass(item.list);
+
+                const itemJson = JSON.stringify(item).replace(/"/g, '&quot;'); 
+
+                return `
+
+                    <div class="result-item-pk flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+
+                        <div class="text-center sm:text-left z-20">
+
+                            <p class="result-name-pk">${item.name}</p>
+
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 z-20">
+
+                            <span class="result-tag-pk rounded-full ${tagClass}">
+
+                                ${item.list}
+
+                            </span>
+
+                            <button class="save-button-pk text-sm" onclick='saveItem(${itemJson})'>
+
+                                GUARDAR 💾
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }).join('');
+
+        }
+
+        
+
+        function showSuggestions(query) {
+
+             // ... (Se mantiene la lógica de sugerencias) ...
+
+            suggestionsContainer.innerHTML = '';
+
+            
+
+            const suggestionResults = inventory
+
+                .filter(item => normalizeString(item.name).includes(query))
+
+                .slice(0, 10); 
+
+            if (suggestionResults.length > 0) {
+
+                suggestionResults.forEach(item => {
+
+                    const div = document.createElement('div');
+
+                    div.classList.add('suggestion-item');
+
+                    div.textContent = item.name;
+
+                    div.onclick = () => {
+
+                        searchInput.value = item.name;
+
+                        searchInventory();
+
+                        suggestionsContainer.innerHTML = '';
+
+                    };
+
+                    suggestionsContainer.appendChild(div);
+
+                });
+
+            }
+
+        }
+
+        
+
+        document.addEventListener('click', (e) => {
+
+            if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+
+                suggestionsContainer.innerHTML = '';
+
+            }
+
+        });
+
+        // --- INICIALIZACIÓN ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 1. Cargar la configuración de costos y multiplicadores (con persistencia)
+
+            loadConfig(); 
+
+            
+
+            // 2. Renderizar las interfaces de configuración
+
+            renderCostConfig();
+
+            renderLocationConfig(); 
+
+            
+
+            // 3. Cargar los ítems guardados (con persistencia)
+
+            loadSavedItems();
+
+            
+
+            // 4. Renderizar los ítems guardados y calcular el total inicial
+
+            renderSavedItems();
+
+        });
+
+        
+
+    </script>
+
+</body>
+
+</html>
+
